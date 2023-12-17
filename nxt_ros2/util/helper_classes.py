@@ -27,6 +27,8 @@ class SensorConfigs:
         types of sensors ('touch', 'reflected_light', 'color', 'ultrasonic')
     sensor_ports : List[str]
         potrs of sensors ('1', '2', '3' or '4')
+    sensor_update_times : List[str]
+        Update times of sensor, defaults to '0.3'
     sensor_frame_ids : List[str, None]
         unique frame id's of sensors, or None
 
@@ -37,6 +39,7 @@ class SensorConfigs:
         self.sensor_names: List[str] = []
         self.sensor_types: List[str] = []
         self.sensor_ports: List[str] = []
+        self.sensor_update_times: List[str] = []
         self.sensor_frame_ids: List[str, None] = []
 
 

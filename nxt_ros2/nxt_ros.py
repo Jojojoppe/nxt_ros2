@@ -68,6 +68,7 @@ class TouchSensor(rclpy.node.Node):
         brick: nxt.brick.Brick,
         name: str,
         port: nxt.sensor.Port,
+        update_time: str,
         frame_id: Union[str, None] = None,
     ):
         """
@@ -85,7 +86,7 @@ class TouchSensor(rclpy.node.Node):
 
         self._publisher = self.create_publisher(nxt_msgs2.msg.Touch, name, 10)
 
-        timer_period = 0.3  # seconds
+        timer_period = int(update_time)
         self._timer = self.create_timer(timer_period, self._cb_measure)
 
     def _cb_measure(self):
@@ -129,6 +130,7 @@ class UltraSonicSensor(rclpy.node.Node):
         brick: nxt.brick.Brick,
         name: str,
         port: nxt.sensor.Port,
+        update_time: str,
         frame_id: Union[str, None] = None,
     ):
         """
@@ -159,7 +161,7 @@ class UltraSonicSensor(rclpy.node.Node):
             sensor_msgs.msg.Range, name, 10
         )
 
-        timer_period = 0.3  # seconds
+        timer_period = int(update_time)
         self._timer = self.create_timer(timer_period, self._cb_measure)
 
     def _cb_measure(self):
@@ -219,6 +221,7 @@ class ColorSensor(rclpy.node.Node):
         brick: nxt.brick.Brick,
         name: str,
         port: nxt.sensor.Port,
+        update_time: str,
         frame_id: Union[str, None] = None,
     ):
         """
@@ -236,7 +239,7 @@ class ColorSensor(rclpy.node.Node):
 
         self._publisher = self.create_publisher(nxt_msgs2.msg.Color, name, 10)
 
-        timer_period = 0.05  # seconds
+        timer_period = int(update_time)
         self._timer = self.create_timer(timer_period, self._cb_measure)
 
     def _cb_measure(self):
@@ -336,6 +339,7 @@ class ReflectedLightSensor(rclpy.node.Node):
         brick: nxt.brick.Brick,
         name: str,
         port: nxt.sensor.Port,
+        update_time: str,
         frame_id: Union[str, None] = None,
     ):
         """
@@ -357,7 +361,7 @@ class ReflectedLightSensor(rclpy.node.Node):
         self.declare_parameter("rgb_color", [0.0, 0.0, 0.0])
         self.add_on_set_parameters_callback(self._cb_set_rgb_color_param)
 
-        timer_period = 0.3
+        timer_period = int(update_time)
         self._timer = self.create_timer(timer_period, self._cb_measure)
 
     def _cb_set_rgb_color_param(self, params: List[rclpy.Parameter]):
@@ -782,7 +786,7 @@ class NxtRos2Setup(rclpy.node.Node):
 
         """
         valid_sensor_ports = ["1", "2", "3", "4"]
-        required_sensor_params = {"sensor_type", "sensor_name"}
+        required_sensor_params = {"sensor_type", "sensor_name", "sensor_update_time"}
 
         sensor_configs = SensorConfigs()
 
@@ -809,6 +813,12 @@ class NxtRos2Setup(rclpy.node.Node):
             sensor_configs.sensor_names.append(
                 sensor_params["sensor_name"].value
             )
+            if "sensor_update_time" in sensor_params:
+                sensor_configs.sensor_update_times.append(
+                    sensor_params["sensor_update_time"].value
+                )
+            else:
+                sensor_configs.sensor_update_times.append("0.3")
 
             if "frame_id" in sensor_params:  # optional parameter
                 sensor_configs.sensor_frame_ids.append(
@@ -921,30 +931,31 @@ class NxtRos2Setup(rclpy.node.Node):
             sensor_port_str = sensor_configs.sensor_ports[i]
             sensor_port_enum = self.str_to_sensor_port_enum(sensor_port_str)
             sensor_type = sensor_configs.sensor_types[i]
+            sensor_update_time = sensor_configs.sensor_update_times[i]
             sensor_frame_id = sensor_configs.sensor_frame_ids[i]
 
             if sensor_type == "touch":
                 sensor_nodes.append(
                     TouchSensor(
-                        brick, sensor_name, sensor_port_enum, sensor_frame_id
+                        brick, sensor_name, sensor_port_enum, sensor_update_time, sensor_frame_id
                     )
                 )
             elif sensor_type == "ultrasonic":
                 sensor_nodes.append(
                     UltraSonicSensor(
-                        brick, sensor_name, sensor_port_enum, sensor_frame_id
+                        brick, sensor_name, sensor_port_enum, sensor_update_time, sensor_frame_id
                     )
                 )
             elif sensor_type == "color":
                 sensor_nodes.append(
                     ColorSensor(
-                        brick, sensor_name, sensor_port_enum, sensor_frame_id
+                        brick, sensor_name, sensor_port_enum, sensor_update_time, sensor_frame_id
                     )
                 )
             elif sensor_type == "reflected_light":
                 sensor_nodes.append(
                     ReflectedLightSensor(
-                        brick, sensor_name, sensor_port_enum, sensor_frame_id
+                        brick, sensor_name, sensor_port_enum, sensor_update_time, sensor_frame_id
                     )
                 )
 
